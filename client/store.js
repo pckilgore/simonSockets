@@ -6,6 +6,7 @@ import socket from './socket';
 const GOT_NEW_ROUND = 'GOT_NEW_ROUND';
 const BUTTON_PUSH = 'BUTTON_PUSH';
 const PLAYED_REMOTE = 'PLAYED_REMOTE';
+const PLAYED_NOTE = 'PLAYED_NOTE';
 
 //action creators
 export const gotNewRound = round => {
@@ -24,7 +25,11 @@ export const playedRemote = () => ({
   type: PLAYED_REMOTE,
 });
 
-export const sendPress = color => async dispatch => {
+export const playedNote = () => ({
+  type: PLAYED_NOTE,
+});
+
+export const sendPress = color => dispatch => {
   socket.emit('button-press', color);
 };
 
@@ -46,6 +51,11 @@ const reducer = (state = initialState, action) => {
       return {
         ...state,
         playlist: [],
+      };
+    case PLAYED_NOTE:
+      return {
+        ...state,
+        playlist: state.playlist.filter((el, idx) => idx !== 0),
       };
     case GOT_NEW_ROUND:
       return {

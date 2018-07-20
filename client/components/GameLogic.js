@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { sendPress, playedRemote } from '../store';
+import { sendPress, playedRemote, playedNote } from '../store';
 
 import GameBoard from './GameBoard.js';
 
@@ -18,23 +18,6 @@ class GameLogic extends React.Component {
     this.playNext = this.playNext.bind(this);
   }
 
-  playNext() {
-    if (this.currentAudio) {
-      // remove the event listener from the audio that has just stopped playing
-      this.currentAudio.removeEventListener('ended', this.playNext);
-    }
-    if (this.playIndex >= this.props.playlist.length) {
-      this.playIndex = 0;
-      this.currentAudio = null;
-      this.props.playedRemote();
-      return;
-    }
-    let color = this.props.playlist[this.playIndex++];
-    this.currentAudio = this.state.players[color];
-    this.currentAudio.play(); // when this ends, the 'ended' event will be fired and 'playNext' will be called
-    this.currentAudio.addEventListener('ended', this.playNext);
-  }
-
   emitPush = color => {
     this.state.players[color].play();
     this.props.sendPress(color);
@@ -42,18 +25,22 @@ class GameLogic extends React.Component {
 
   componentDidUpdate() {
     if (this.props.playlist.length) {
-      this.playNext();
+      let color = this.props.playlist[0];
+      let player = this.state.players[color];
+      player.addEventListener('ended', this.props.playNextNote);
+      player.play();
     }
   }
 
   render() {
-    return <GameBoard emitPush={this.emitPush} pushed={} />;
+    return <GameBoard emitPush={this.emitPush} />;
   }
 }
 
 const mapDispatchToProps = dispatch => ({
   sendPress: color => dispatch(sendPress(color)),
   playedRemote: () => dispatch(playedRemote()),
+  playNextNote: () => dispatch(playedNote()),
 });
 
 const mapStateToProps = state => ({
