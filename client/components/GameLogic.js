@@ -1,46 +1,55 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { sendPress, playedRemote, playedNote } from '../store';
+import { sendPress, playDone, sendRand } from '../store';
 
 import GameBoard from './GameBoard.js';
 
 class GameLogic extends React.Component {
-  constructor() {
-    super();
-    this.state = {
-      players: ['red', 'blue', 'green', 'yellow'].reduce((acc, color) => {
-        acc[color] = new Audio(`/media/${color}.mp3`);
-        return acc;
-      }, {}),
-    };
-    this.currentAudio = null;
-    this.playIndex = 0;
-    this.playNext = this.playNext.bind(this);
-  }
-
   emitPush = color => {
-    this.state.players[color].play();
-    this.props.sendPress(color);
+    if (this.props.playlist.length === 0) {
+      let player = new Audio(`/media/${color}.mp3`);
+      this.props.sendPress(color);
+      player.play();
+    }
   };
+
+  requestRand = () => {
+    this.props.sendRand();
+  };
+
+  playNotes(playlist) {
+    let [color, ...rest] = playlist;
+
+    console.log('Playing:', color, '---rest:', rest);
+
+    let player = new Audio(`/media/${color}.mp3`);
+
+    Waves.ripple(`#${color}_button`);
+    player.addEventListener('ended', Waves.calm(`#${color}_button`));
+
+    player.addEventListener('ended', () => {
+      if (rest.length) this.playNotes(rest);
+      else this.props.playDone();
+    });
+
+    player.play();
+  }
 
   componentDidUpdate() {
     if (this.props.playlist.length) {
-      let color = this.props.playlist[0];
-      let player = this.state.players[color];
-      player.addEventListener('ended', this.props.playNextNote);
-      player.play();
+      this.playNotes(this.props.playlist);
     }
   }
 
   render() {
-    return <GameBoard emitPush={this.emitPush} />;
+    return <GameBoard emitPush={this.emitPush} newRand={this.requestRand} />;
   }
 }
 
 const mapDispatchToProps = dispatch => ({
   sendPress: color => dispatch(sendPress(color)),
-  playedRemote: () => dispatch(playedRemote()),
-  playNextNote: () => dispatch(playedNote()),
+  playDone: () => dispatch(playDone()),
+  sendRand: () => dispatch(sendRand()),
 });
 
 const mapStateToProps = state => ({

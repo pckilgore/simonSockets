@@ -19,6 +19,20 @@ io.on('connection', function(socket) {
     socket.broadcast.emit('pushed', data);
   });
 
+  socket.on('random', (data = 20) => {
+    console.log('Got request for random');
+    const notes = Array(data)
+      .fill('')
+      .map(
+        () =>
+          ({ 0: 'red', 1: 'yellow', 2: 'green', 3: 'blue' }[
+            Math.floor(Math.random() * 4)
+          ])
+      );
+    console.log('Going to emit:', notes);
+    socket.broadcast.emit('new-round', notes);
+  });
+
   socket.on('disconnect', function(whyClosed) {
     console.log(`${whyClosed}: client ${socket.id} disconnected.  :-(`);
   });

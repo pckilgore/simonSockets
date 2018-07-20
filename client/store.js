@@ -5,8 +5,7 @@ import socket from './socket';
 //action types
 const GOT_NEW_ROUND = 'GOT_NEW_ROUND';
 const BUTTON_PUSH = 'BUTTON_PUSH';
-const PLAYED_REMOTE = 'PLAYED_REMOTE';
-const PLAYED_NOTE = 'PLAYED_NOTE';
+const PLAY_DONE = 'PLAY_DONE';
 
 //action creators
 export const gotNewRound = round => {
@@ -16,47 +15,47 @@ export const gotNewRound = round => {
   };
 };
 
+export const playDone = () => ({
+  type: PLAY_DONE,
+});
+
 export const buttonPush = color => ({
   type: BUTTON_PUSH,
   color,
-});
-
-export const playedRemote = () => ({
-  type: PLAYED_REMOTE,
-});
-
-export const playedNote = () => ({
-  type: PLAYED_NOTE,
 });
 
 export const sendPress = color => dispatch => {
   socket.emit('button-press', color);
 };
 
+export const sendRand = () => dispatch => {
+  socket.emit('random', 20);
+};
 //initial state
 const initialState = {
-  round: 0,
   playlist: [],
+  playQueue: [],
 };
 
 //reducer
 const reducer = (state = initialState, action) => {
   switch (action.type) {
+    case PLAY_DONE:
+      return {
+        playlist: [...state.playQueue],
+        playQueue: [],
+      };
     case BUTTON_PUSH:
-      return {
-        ...state,
-        playlist: [...state.playlist, action.color],
-      };
-    case PLAYED_REMOTE:
-      return {
-        ...state,
-        playlist: [],
-      };
-    case PLAYED_NOTE:
-      return {
-        ...state,
-        playlist: state.playlist.filter((el, idx) => idx !== 0),
-      };
+      if (state.playlist.length)
+        return {
+          ...state,
+          playQueue: [...state.playQueue, action.color],
+        };
+      else
+        return {
+          ...state,
+          playlist: [action.color],
+        };
     case GOT_NEW_ROUND:
       return {
         ...state,

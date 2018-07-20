@@ -10,6 +10,11 @@ socket.on('connect', () => {
     console.log('Got new push', data);
     store.dispatch(buttonPush(data));
   });
+
+  socket.on('new-round', data => {
+    console.log('Got new round', data);
+    store.dispatch(gotNewRound(data));
+  });
 });
 
 export default socket;
