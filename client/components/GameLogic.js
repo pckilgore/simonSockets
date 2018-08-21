@@ -27,15 +27,16 @@ class GameLogic extends React.Component {
     Waves.ripple(`#${color}_button`);
     player.addEventListener('ended', Waves.calm(`#${color}_button`));
 
+    player.play();
     player.addEventListener('ended', () => {
       if (rest.length) this.playNotes(rest);
       else this.props.playDone();
     });
 
-    player.play();
   }
 
   componentDidUpdate() {
+    // Finn
     if (this.props.playlist.length) {
       this.playNotes(this.props.playlist);
     }

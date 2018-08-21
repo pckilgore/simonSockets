@@ -4,11 +4,12 @@ import socket from './socket';
 
 //action types
 const GOT_NEW_ROUND = 'GOT_NEW_ROUND';
-const BUTTON_PUSH = 'BUTTON_PUSH';
+const BUTTON_PRESS_PLAY = 'BUTTON_PRESS_PLAY';
+const BUTTON_PRESS_QUEUE = 'BUTTON_PRESS_QUEUE';
 const PLAY_DONE = 'PLAY_DONE';
 
 //action creators
-export const gotNewRound = round => {
+export const playNewRound = round => {
   return {
     type: GOT_NEW_ROUND,
     round,
@@ -19,8 +20,13 @@ export const playDone = () => ({
   type: PLAY_DONE,
 });
 
-export const buttonPush = color => ({
-  type: BUTTON_PUSH,
+const addPressToQueue = color => ({
+  type: BUTTON_PRESS_QUEUE,
+  color,
+});
+
+const addPressToPlaylist = color => ({
+  type: BUTTON_PRESS_PLAY,
   color,
 });
 
@@ -31,6 +37,22 @@ export const sendPress = color => dispatch => {
 export const sendRand = () => dispatch => {
   socket.emit('random', 20);
 };
+
+export const buttonPush = color => (dispatch, getState) => {
+  const { playlist } = getState();
+  if (playlist.length) dispatch(addPressToQueue(color));
+  else dispatch(addPressToPlaylist(color));
+};
+
+export const gotNewRound = round => (dispatch, getState) => {
+  const { playlist, playQueue } = getState();
+  if (playlist.length + playQueue.length === 0) dispatch(playNewRound(round));
+  else {
+    console.log('Error: Received new round while already playing notes.');
+    console.log('Event swallowed.');
+  }
+};
+
 //initial state
 const initialState = {
   playlist: [],
@@ -45,17 +67,16 @@ const reducer = (state = initialState, action) => {
         playlist: [...state.playQueue],
         playQueue: [],
       };
-    case BUTTON_PUSH:
-      if (state.playlist.length)
-        return {
-          ...state,
-          playQueue: [...state.playQueue, action.color],
-        };
-      else
-        return {
-          ...state,
-          playlist: [action.color],
-        };
+    case BUTTON_PRESS_QUEUE:
+      return {
+        ...state,
+        playQueue: [...state.playQueue, action.color],
+      };
+    case BUTTON_PRESS_PLAY:
+      return {
+        ...state,
+        playlist: [action.color],
+      };
     case GOT_NEW_ROUND:
       return {
         ...state,

@@ -2,7 +2,7 @@ import React from 'react';
 import SimonButton from './SimonButton';
 
 const GameBoard = props => (
-  <div className="container" style={{ overflow: 'hidden' }}>
+  <div className="container align-center" style={{ overflow: 'hidden' }}>
     <button className="btn" type="button" onClick={props.newRand}>
       Emit Random{' '}
     </button>
